@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="cell_dimen">74dp</dimen>
+    <dimen name="splash_logo_width">403dp</dimen>
+    <dimen name="playAgainButton_marginEnd">7dp</dimen>
+    <dimen name="tryAgainText_marginTop">146dp</dimen>
+    <dimen name="youWinText_marginTop">188dp</dimen>
+    <dimen name="levelJoker_width">500dp</dimen>
+    <dimen name="levelJoker_height">373dp</dimen>
+    <dimen name="levelJoker_marginTop">-3dp</dimen>
+    <dimen name="cellsContainer_marginBottom">45dp</dimen>
+    <dimen name="staticBall_dimen">28dp</dimen>
+    <dimen name="ball_width">61dp</dimen>
+    <dimen name="ball_height">66dp</dimen>
+</resources>
