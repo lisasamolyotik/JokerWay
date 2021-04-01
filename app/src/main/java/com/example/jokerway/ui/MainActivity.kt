@@ -5,21 +5,22 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
+import androidx.lifecycle.Observer
 import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
 import com.appsflyer.AppsFlyerLibCore
+import com.example.jokerway.viewodel.MainViewModel
 import com.example.jokerway.R
 import com.example.jokerway.api.ApiService
 import com.example.jokerway.api.data.ApiData
 import com.example.jokerway.api.data.PushClickApiData
 import com.example.jokerway.databinding.ActivityMainBinding
 import com.example.jokerway.model.Url
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     private val appBundle = "com.example.jokerway"
     private val afKey = "KDnjABKKYvMH9FSEdHAuCd"
     private val tag = "MainActivity"
+
+    private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,37 +51,40 @@ class MainActivity : AppCompatActivity() {
         val appsFlyerId = AppsFlyerLib.getInstance().getAppsFlyerUID(this)
         Log.d(tag, appsFlyerId)
 
-        val token = getToken()
-        Log.d(tag, "firebase device token: $token")
-
         val remoteConfig = Firebase.remoteConfig
         fetchFirebaseRemoteConfig(remoteConfig)
-        addWebView(createUrl(remoteConfig, token, appsFlyerId))
-
         val locale = resources.configuration.locales[0]
-        val apiData = ApiData(appBundle, locale.toString(), token, appsFlyerId, os)
-        Log.d(tag, "apiData: $apiData")
-        val apiService = ApiService()
-        apiService.postData(apiData) {
-            if (it != null) {
-                Log.d(tag, "Successful post request, apiData: $it")
-            } else {
-                Log.d(tag, "Post request failed")
-            }
-        }
 
-        /*if (intent != null) {
-            Log.d(tag, "Activity started from a notification")
-            val pushClickApiData = PushClickApiData(appBundle, appsFlyerId, os)
-            Log.d(tag, "pushClickApiData: $pushClickApiData")
-            apiService.postPushClickData(pushClickApiData) {
+        viewModel.getToken()
+        viewModel.token.observe(this, Observer {
+            val token = it
+            Log.d(tag, "firebase device token: $token")
+            addWebView(createUrl(remoteConfig, token, appsFlyerId))
+
+            val apiData = ApiData(appBundle, locale.toString(), token, appsFlyerId, os)
+            Log.d(tag, "apiData: $apiData")
+            val apiService = ApiService()
+            apiService.postData(apiData) {
                 if (it != null) {
                     Log.d(tag, "Successful post request, apiData: $it")
                 } else {
                     Log.d(tag, "Post request failed")
                 }
             }
-        }*/
+
+            if (intent.extras?.getBoolean(SplashActivity.OPENED_FROM_NOTIFICATION) == true) {
+                Log.d(tag, "Activity started from a notification")
+                val pushClickApiData = PushClickApiData(appBundle, appsFlyerId, os)
+                Log.d(tag, "pushClickApiData: $pushClickApiData")
+                apiService.postPushClickData(pushClickApiData) {
+                    if (it != null) {
+                        Log.d(tag, "Successful post request, apiData: $it")
+                    } else {
+                        Log.d(tag, "Post request failed")
+                    }
+                }
+            }
+        })
     }
 
     private fun startAppsFlyer() {
@@ -111,19 +117,6 @@ class MainActivity : AppCompatActivity() {
 
         AppsFlyerLib.getInstance().init(afKey, conversionDataListener, this)
         AppsFlyerLib.getInstance().start(this)
-    }
-
-    private fun getToken(): String {
-        var token: String? = null
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w(tag, "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
-            }
-            token = task.result
-        })
-        return if (token != null) token!!
-        else "nodata"
     }
 
     private fun fetchFirebaseRemoteConfig(remoteConfig: FirebaseRemoteConfig) {

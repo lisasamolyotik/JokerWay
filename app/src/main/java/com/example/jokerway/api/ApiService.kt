@@ -1,5 +1,6 @@
 package com.example.jokerway.api
 
+import android.util.Log
 import com.example.jokerway.api.data.ApiData
 import com.example.jokerway.api.data.PushClickApiData
 import retrofit2.Call
@@ -17,6 +18,7 @@ class ApiService {
 
                 override fun onResponse(call: Call<ApiData>, response: Response<ApiData>) {
                     val apiDataResponse = response.body()
+                    Log.d("ApiService", response.code().toString())
                     onResult(apiDataResponse)
                 }
             }
